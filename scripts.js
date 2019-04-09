@@ -1,8 +1,25 @@
+/* eslint-disable linebreak-style */
 /* eslint-disable no-console */
-window.addEventListener('DOMContentLoaded', function () {
-    console.log('test');
+/* globals window */
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('test');
 
-    let simpleLevelPlan = `
+  class Vec {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+
+    plus(other) {
+      return new Vec(this.x + other.x, this.y + other.y);
+    }
+
+    times(factor) {
+      return new Vec(this.x * factor, this.y * factor);
+    }
+  }
+
+  const simpleLevelPlan = `
         ......................
         ..#................#..
         ..#..............=.#..
@@ -13,26 +30,41 @@ window.addEventListener('DOMContentLoaded', function () {
         ......##############..
         ......................`;
 
-    class Level {
-        constructor (plan) {
-            let rows = plan
-                .trim()
-                .split('\n')
-            // each line is spread into an array, producing arrays of characters.
-                .map(l => [...l]);
-            this.height = rows.length;
-            this.width = rows[0].length;
-            this.startActors = [];
+  class Level {
+    constructor(plan) {
+      const rows = plan
+        .trim()
+        .split('\n')
+        // each line is spread into an array, producing arrays of characters.
+        .map(l => [...l]);
+      this.height = rows.length;
+      this.width = rows[0].length;
+      this.startActors = [];
 
-            this.rows = rows.map((row, y) => {
-                return row.map((ch, x) => {
-                // let type = levelChars[ch];
-                // if (typeof type === 'string') return type;
-                // this.startActors.push(type.create(new Vec(x, y), ch));
-                    return 'empty';
-                });
-            });
-        }
+      this.rows = rows.map((row, y) => row.map((ch, x) => {
+        const type = levelChars[ch];
+        if (typeof type === 'string') return type;
+        this.startActors.push(type.create(new Vec(x, y), ch));
+        return 'empty';
+      }));
     }
-    Level(simpleLevelPlan);
+  }
+
+  class State {
+    constructor(level, actors, status) {
+      this.level = level;
+      this.actors = actors;
+      this.status = status;
+    }
+
+    static start(level) {
+      return new State(level, level.startActors, 'playing');
+    }
+
+    get player() {
+      return this.actors.find(a => a.type === 'player');
+    }
+  }
+
+  Level(simpleLevelPlan);
 });
