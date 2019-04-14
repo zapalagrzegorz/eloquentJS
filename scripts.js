@@ -1,6 +1,7 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-console */
 /* globals window */
+/* eslint-disable no-restricted-syntax */
 window.addEventListener('DOMContentLoaded', () => {
   console.log('test');
 
@@ -31,45 +32,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const simpleLevelPlan = `
-        ......................
-        ..#................#..
-        ..#..............=.#..
-        ..#.........o.o....#..
-        ..#.@......#####...#..
-        ..#####............#..
-        ......#++++++++++++#..
-        ......##############..
-        ......................`;
+  const simpleLevelPlan = `......................
+..#................#..
+..#..............=.#..
+..#.........o.o....#..
+..#.@......#####...#..
+..#####............#..
+......#++++++++++++#..
+......##############..
+......................`;
 
-  /**
-   *
-   */
-  class Level {
-    constructor(plan) {
-      const rows = plan
-        .trim()
-        .split('\n')
-        // each line is spread into an array, producing arrays of characters.
-        .map(l => [...l]);
-      this.height = rows.length;
-      this.width = rows[0].length;
-      this.startActors = [];
 
-      // zampować tablicę wymiarową
-      // lista [], zawiera listę rzedów [], które są zawierają kolejne rzędy
-      // lista [
-      //    [ [a], [b], [c], [d] ],
-      //    [ a1], [a2], [a3], [a4] ],
-      //    ...]
-      this.rows = rows.map((row, y) => row.map((ch, x) => {
-        const type = levelChars[ch];
-        if (typeof type === 'string') return type;
-        this.startActors.push(type.create(new Vec(x, y), ch));
-        return 'empty';
-      }));
-    }
-  }
   /**
    * @constructor
    */
@@ -192,7 +165,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   Coin.prototype.size = new Vec(0.6, 0.6);
 
-
   const levelChars = {
     '.': 'empty',
     '#': 'wall',
@@ -203,6 +175,112 @@ window.addEventListener('DOMContentLoaded', () => {
     '|': Lava,
     v: Lava,
   };
+  /**
+   *
+   */
+  class Level {
+    constructor(plan) {
+      const rows = plan
+        .trim()
+        .split('\n')
+        // each line is spread into an array, producing arrays of characters.
+        .map(l => [...l]);
+      this.height = rows.length;
+      this.width = rows[0].length;
+      this.startActors = [];
 
-  Level(simpleLevelPlan);
+      // zampować tablicę wymiarową
+      // lista [], zawiera listę rzedów [], które są zawierają kolejne rzędy
+      // lista [
+      //    [ [a], [b], [c], [d] ],
+      //    [ a1], [a2], [a3], [a4] ],
+      //    ...]
+      this.rows = rows.map((row, y) => row.map((ch, x) => {
+        const type = levelChars[ch];
+        if (typeof type === 'string') return type;
+        this.startActors.push(type.create(new Vec(x, y), ch));
+        return 'empty';
+      }));
+    }
+  }
+
+  const simpleLevel = new Level(simpleLevelPlan);
+  console.log(`${simpleLevel.width} by ${simpleLevel.height}`);
+  // → 22 by 9
+
+
+  function elt(name, attrs, ...children) {
+    const dom = document.createElement(name);
+    // {required: true}
+    for (const attr of Object.keys(attrs)) {
+      dom.setAttribute(attr, attrs[attr]);
+    }
+    for (const child of children) {
+      dom.appendChild(child);
+    }
+    return dom;
+  }
+
+
+  const scale = 20;
+  function drawGrid(level) {
+    return elt('table', {
+      class: 'background',
+      style: `width: ${level.width * scale}px`,
+    }, ...level.rows.map(row => elt('tr', { style: `height: ${scale}px` },
+      ...row.map(type => elt('td', { class: type })))));
+  }
+  class DOMDisplay {
+    constructor(parent, level) {
+      this.dom = elt('div', { class: 'game' }, drawGrid(level));
+      this.actorLayer = null;
+      parent.appendChild(this.dom);
+    }
+
+    clear() { this.dom.remove(); }
+  }
+
+
+  function drawActors(actors) {
+    return elt('div', {}, ...actors.map((actor) => {
+      const rect = elt('div', { class: `actor ${actor.type}` });
+      rect.style.width = `${actor.size.x * scale}px`;
+      rect.style.height = `${actor.size.y * scale}px`;
+      rect.style.left = `${actor.pos.x * scale}px`;
+      rect.style.top = `${actor.pos.y * scale}px`;
+      return rect;
+    }));
+  }
+
+  DOMDisplay.prototype.syncState = function syncState(state) {
+    if (this.actorLayer) this.actorLayer.remove();
+    this.actorLayer = drawActors(state.actors);
+    this.dom.appendChild(this.actorLayer);
+    this.dom.className = `game ${state.status}`;
+    this.scrollPlayerIntoView(state);
+  };
+
+  DOMDisplay.prototype.scrollPlayerIntoView = function scrollPlayerIntoView(state) {
+    const width = this.dom.clientWidth;
+    const height = this.dom.clientHeight;
+    const margin = width / 3;
+    // The viewport
+    const left = this.dom.scrollLeft; const
+      right = left + width;
+    const top = this.dom.scrollTop; const
+      bottom = top + height;
+    const { player } = state;
+    const center = player.pos.plus(player.size.times(0.5))
+      .times(scale);
+    if (center.x < left + margin) {
+      this.dom.scrollLeft = center.x - margin;
+    } else if (center.x > right - margin) {
+      this.dom.scrollLeft = center.x + margin - width;
+    }
+    if (center.y < top + margin) {
+      this.dom.scrollTop = center.y - margin;
+    } else if (center.y > bottom - margin) {
+      this.dom.scrollTop = center.y + margin - height;
+    }
+  };
 });
