@@ -4,6 +4,7 @@
 window.addEventListener('DOMContentLoaded', () => {
   console.log('test');
 
+
   /**  */
   class Vec {
     constructor(x, y) {
@@ -55,7 +56,12 @@ window.addEventListener('DOMContentLoaded', () => {
       this.width = rows[0].length;
       this.startActors = [];
 
-      // zampować tablicę dwuwymiarową
+      // zampować tablicę wymiarową
+      // lista [], zawiera listę rzedów [], które są zawierają kolejne rzędy
+      // lista [
+      //    [ [a], [b], [c], [d] ],
+      //    [ a1], [a2], [a3], [a4] ],
+      //    ...]
       this.rows = rows.map((row, y) => row.map((ch, x) => {
         const type = levelChars[ch];
         if (typeof type === 'string') return type;
@@ -65,7 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
   /**
-   *
+   * @constructor
    */
   class State {
     constructor(level, actors, status) {
@@ -88,9 +94,14 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   *
+
    */
   class Player {
+    /**
+     * @constructor
+     * @param {Vec} pos
+     * @param {Vec} speed
+     */
     constructor(pos, speed) {
       this.pos = pos;
       this.speed = speed;
@@ -119,7 +130,7 @@ window.addEventListener('DOMContentLoaded', () => {
      *
      * @param {Vec} pos
      * @param {Vec} speed
-     * @param {*} reset
+     * @param {Vec} reset
      */
     constructor(pos, speed, reset) {
       this.pos = pos;
@@ -157,6 +168,12 @@ window.addEventListener('DOMContentLoaded', () => {
   Lava.prototype.size = new Vec(1, 1);
 
   class Coin {
+    /**
+     *
+     * @param {Vec} pos
+     * @param {Vec} basePos
+     * @param {*} wobble
+     */
     constructor(pos, basePos, wobble) {
       this.pos = pos;
       this.basePos = basePos;
@@ -174,5 +191,18 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   Coin.prototype.size = new Vec(0.6, 0.6);
+
+
+  const levelChars = {
+    '.': 'empty',
+    '#': 'wall',
+    '+': 'lava',
+    '@': Player,
+    o: Coin,
+    '=': Lava,
+    '|': Lava,
+    v: Lava,
+  };
+
   Level(simpleLevelPlan);
 });
