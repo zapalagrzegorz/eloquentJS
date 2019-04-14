@@ -204,8 +204,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const simpleLevel = new Level(simpleLevelPlan);
-  console.log(`${simpleLevel.width} by ${simpleLevel.height}`);
+  // const simpleLevel = new Level(simpleLevelPlan);
+  // console.log(`${simpleLevel.width} by ${simpleLevel.height}`);
   // → 22 by 9
 
 
@@ -283,4 +283,8 @@ window.addEventListener('DOMContentLoaded', () => {
       this.dom.scrollTop = center.y + margin - height;
     }
   };
+
+  const simpleLevel = new Level(simpleLevelPlan);
+  const display = new DOMDisplay(document.body, simpleLevel);
+  display.syncState(State.start(simpleLevel));
 });
