@@ -5,7 +5,6 @@
 window.addEventListener('DOMContentLoaded', () => {
   console.log('test');
 
-
   /**  */
   class Vec {
     constructor(x, y) {
@@ -41,7 +40,6 @@ window.addEventListener('DOMContentLoaded', () => {
 ......#++++++++++++#..
 ......##############..
 ......................`;
-
 
   /**
    * @constructor
@@ -208,7 +206,6 @@ window.addEventListener('DOMContentLoaded', () => {
   console.log(`${simpleLevel.width} by ${simpleLevel.height}`);
   // → 22 by 9
 
-
   function elt(name, attrs, ...children) {
     const dom = document.createElement(name);
     // {required: true}
@@ -221,14 +218,16 @@ window.addEventListener('DOMContentLoaded', () => {
     return dom;
   }
 
-
   const scale = 20;
   function drawGrid(level) {
-    return elt('table', {
-      class: 'background',
-      style: `width: ${level.width * scale}px`,
-    }, ...level.rows.map(row => elt('tr', { style: `height: ${scale}px` },
-      ...row.map(type => elt('td', { class: type })))));
+    return elt(
+      'table',
+      {
+        class: 'background',
+        style: `width: ${level.width * scale}px`,
+      },
+      ...level.rows.map(row => elt('tr', { style: `height: ${scale}px` }, ...row.map(type => elt('td', { class: type })))),
+    );
   }
   class DOMDisplay {
     constructor(parent, level) {
@@ -237,19 +236,24 @@ window.addEventListener('DOMContentLoaded', () => {
       parent.appendChild(this.dom);
     }
 
-    clear() { this.dom.remove(); }
+    clear() {
+      this.dom.remove();
+    }
   }
 
-
   function drawActors(actors) {
-    return elt('div', {}, ...actors.map((actor) => {
-      const rect = elt('div', { class: `actor ${actor.type}` });
-      rect.style.width = `${actor.size.x * scale}px`;
-      rect.style.height = `${actor.size.y * scale}px`;
-      rect.style.left = `${actor.pos.x * scale}px`;
-      rect.style.top = `${actor.pos.y * scale}px`;
-      return rect;
-    }));
+    return elt(
+      'div',
+      {},
+      ...actors.map((actor) => {
+        const rect = elt('div', { class: `actor ${actor.type}` });
+        rect.style.width = `${actor.size.x * scale}px`;
+        rect.style.height = `${actor.size.y * scale}px`;
+        rect.style.left = `${actor.pos.x * scale}px`;
+        rect.style.top = `${actor.pos.y * scale}px`;
+        return rect;
+      }),
+    );
   }
 
   DOMDisplay.prototype.syncState = function syncState(state) {
@@ -265,13 +269,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const height = this.dom.clientHeight;
     const margin = width / 3;
     // The viewport
-    const left = this.dom.scrollLeft; const
-      right = left + width;
-    const top = this.dom.scrollTop; const
-      bottom = top + height;
+    const left = this.dom.scrollLeft;
+    const right = left + width;
+    const top = this.dom.scrollTop;
+    const bottom = top + height;
     const { player } = state;
-    const center = player.pos.plus(player.size.times(0.5))
-      .times(scale);
+    const center = player.pos.plus(player.size.times(0.5)).times(scale);
     if (center.x < left + margin) {
       this.dom.scrollLeft = center.x - margin;
     } else if (center.x > right - margin) {
@@ -282,5 +285,73 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (center.y > bottom - margin) {
       this.dom.scrollTop = center.y + margin - height;
     }
+  };
+
+  /**
+   *
+   */
+  Level.prototype.touches = function touches(pos, size, type) {
+    const xStart = Math.floor(pos.x);
+    const xEnd = Math.ceil(pos.x + size.x);
+    const yStart = Math.floor(pos.y);
+    const yEnd = Math.ceil(pos.y + size.y);
+
+    for (let y = yStart; y < yEnd; y += 1) {
+      for (let x = xStart; x < xEnd; x += 1) {
+        const isOutside = x < 0 || x >= this.width
+                        || y < 0 || y >= this.height;
+        const here = isOutside ? 'wall' : this.rows[y][x];
+        if (here === type) return true;
+      }
+    }
+    return false;
+  };
+
+  /**
+   *
+   * @param {Coin | Player | Lava} actor1
+   * @param {Coin | Player | Lava} actor2
+   */
+  function overlap(actor1, actor2) {
+    return actor1.pos.x + actor1.size.x > actor2.pos.x
+           && actor1.pos.x < actor2.pos.x + actor2.size.x
+           && actor1.pos.y + actor1.size.y > actor2.pos.y
+           && actor1.pos.y < actor2.pos.y + actor2.size.y;
+  }
+
+  /**
+   *
+   */
+  State.prototype.update = function update(time, keys) {
+    const actors = this.actors
+      .map(actor => actor.update(time, this, keys));
+    let newState = new State(this.level, actors, this.status);
+
+    if (newState.status !== 'playing') return newState;
+
+    const { player } = newState;
+    if (this.level.touches(player.pos, player.size, 'lava')) {
+      return new State(this.level, actors, 'lost');
+    }
+
+    for (const actor of actors) {
+      if (actor !== player && overlap(actor, player)) {
+        newState = actor.collide(newState);
+      }
+    }
+    return newState;
+  };
+
+  Lava.prototype.collide = function collide(state) {
+    return new State(state.level, state.actors, 'lost');
+  };
+
+
+  Coin.prototype.collide = function collide(state) {
+    const filtered = state.actors.filter(a => a !== this);
+    let { status } = state;
+    // jeśli nie ma żadnego elementu spełniajacego warunek
+    if (!filtered.some(a => a.type === 'coin')) status = 'won';
+    return new State(state.level, filtered, status);
   };
 });
