@@ -298,8 +298,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     for (let y = yStart; y < yEnd; y += 1) {
       for (let x = xStart; x < xEnd; x += 1) {
-        const isOutside = x < 0 || x >= this.width
-                        || y < 0 || y >= this.height;
+        const isOutside = x < 0 || x >= this.width || y < 0 || y >= this.height;
         const here = isOutside ? 'wall' : this.rows[y][x];
         if (here === type) return true;
       }
@@ -313,18 +312,19 @@ window.addEventListener('DOMContentLoaded', () => {
    * @param {Coin | Player | Lava} actor2
    */
   function overlap(actor1, actor2) {
-    return actor1.pos.x + actor1.size.x > actor2.pos.x
-           && actor1.pos.x < actor2.pos.x + actor2.size.x
-           && actor1.pos.y + actor1.size.y > actor2.pos.y
-           && actor1.pos.y < actor2.pos.y + actor2.size.y;
+    return (
+      actor1.pos.x + actor1.size.x > actor2.pos.x
+      && actor1.pos.x < actor2.pos.x + actor2.size.x
+      && actor1.pos.y + actor1.size.y > actor2.pos.y
+      && actor1.pos.y < actor2.pos.y + actor2.size.y
+    );
   }
 
   /**
    *
    */
   State.prototype.update = function update(time, keys) {
-    const actors = this.actors
-      .map(actor => actor.update(time, this, keys));
+    const actors = this.actors.map(actor => actor.update(time, this, keys));
     let newState = new State(this.level, actors, this.status);
 
     if (newState.status !== 'playing') return newState;
@@ -346,7 +346,6 @@ window.addEventListener('DOMContentLoaded', () => {
     return new State(state.level, state.actors, 'lost');
   };
 
-
   Coin.prototype.collide = function collide(state) {
     const filtered = state.actors.filter(a => a !== this);
     let { status } = state;
@@ -359,7 +358,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const newPos = this.pos.plus(this.speed.times(time));
     if (!state.level.touches(newPos, this.size, 'wall')) {
       return new Lava(newPos, this.speed, this.reset);
-    } if (this.reset) {
+    }
+    if (this.reset) {
       return new Lava(this.reset, this.speed, this.reset);
     }
     return new Lava(this.pos, this.speed.times(-1));
@@ -371,8 +371,7 @@ window.addEventListener('DOMContentLoaded', () => {
   Coin.prototype.update = function update(time) {
     const wobble = this.wobble + time * wobbleSpeed;
     const wobblePos = Math.sin(wobble) * wobbleDist;
-    return new Coin(this.basePos.plus(new Vec(0, wobblePos)),
-      this.basePos, wobble);
+    return new Coin(this.basePos.plus(new Vec(0, wobblePos)), this.basePos, wobble);
   };
 
   const playerXSpeed = 7;
