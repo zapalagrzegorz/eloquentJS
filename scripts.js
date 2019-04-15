@@ -354,4 +354,50 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!filtered.some(a => a.type === 'coin')) status = 'won';
     return new State(state.level, filtered, status);
   };
+
+  Lava.prototype.update = function update(time, state) {
+    const newPos = this.pos.plus(this.speed.times(time));
+    if (!state.level.touches(newPos, this.size, 'wall')) {
+      return new Lava(newPos, this.speed, this.reset);
+    } if (this.reset) {
+      return new Lava(this.reset, this.speed, this.reset);
+    }
+    return new Lava(this.pos, this.speed.times(-1));
+  };
+
+  const wobbleSpeed = 8;
+  const wobbleDist = 0.07;
+
+  Coin.prototype.update = function update(time) {
+    const wobble = this.wobble + time * wobbleSpeed;
+    const wobblePos = Math.sin(wobble) * wobbleDist;
+    return new Coin(this.basePos.plus(new Vec(0, wobblePos)),
+      this.basePos, wobble);
+  };
+
+  const playerXSpeed = 7;
+  const gravity = 30;
+  const jumpSpeed = 17;
+
+  Player.prototype.update = function update(time, state, keys) {
+    let xSpeed = 0;
+    if (keys.ArrowLeft) xSpeed -= playerXSpeed;
+    if (keys.ArrowRight) xSpeed += playerXSpeed;
+    let { pos } = this;
+    const movedX = pos.plus(new Vec(xSpeed * time, 0));
+    if (!state.level.touches(movedX, this.size, 'wall')) {
+      pos = movedX;
+    }
+
+    let ySpeed = this.speed.y + time * gravity;
+    const movedY = pos.plus(new Vec(0, ySpeed * time));
+    if (!state.level.touches(movedY, this.size, 'wall')) {
+      pos = movedY;
+    } else if (keys.ArrowUp && ySpeed > 0) {
+      ySpeed = -jumpSpeed;
+    } else {
+      ySpeed = 0;
+    }
+    return new Player(pos, new Vec(xSpeed, ySpeed));
+  };
 });
