@@ -24,6 +24,8 @@
   background: rgb(64, 64, 64);
 }
 
+.monster { background: purple }
+
 .game {
   overflow: hidden;
   max-width: 600px;

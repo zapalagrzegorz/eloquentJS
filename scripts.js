@@ -1,10 +1,24 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable class-methods-use-this */
 /* eslint-disable no-console */
 /* globals window */
 /* eslint-disable no-restricted-syntax */
 window.addEventListener('DOMContentLoaded', () => {
-  const GAME_LEVELS = [`                                                    
-................................................................................
+  const GAME_LEVELS = [
+    `..................................
+.################################.
+.#..............................#.
+.#..............................#.
+.#..............................#.
+.#...........................o..#.
+.#..@...........................#.
+.##########..............########.
+..........#..o..o..o..o..#........
+..........#...........M..#........
+..........################........
+..................................
+`,
+    `................................................................................
 ................................................................................
 ................................................................................
 ................................................................................
@@ -28,7 +42,8 @@ window.addEventListener('DOMContentLoaded', () => {
 ..............................#####..................#######....................
 ................................................................................
 ................................................................................
-`, `                                                                     
+`,
+    `                                                                     
 ................................................................................
 ................................................................................
 ....###############################.............................................
@@ -61,7 +76,8 @@ window.addEventListener('DOMContentLoaded', () => {
 ...........................................#++++++++#.........##############....
 ...........................................##########...........................
 ................................................................................
-`, `
+`,
+    `
 ......................................#++#........................#######....................................#+#..
 ......................................#++#.....................####.....####.................................#+#..
 ......................................#++##########...........##...........##................................#+#..
@@ -92,7 +108,8 @@ window.addEventListener('DOMContentLoaded', () => {
 ++++#.#++++++#.........#+++++##.......##############++++++##...+..................................................
 ++++#.#++++++#.........#++++++#########++++++++++++++++++##....+..................................................
 ++++#.#++++++#.........#++++++++++++++++++++++++++++++++##.....+..................................................
-`, `
+`,
+    `
 ..............................................................................................................
 ..............................................................................................................
 ..............................................................................................................
@@ -140,7 +157,8 @@ window.addEventListener('DOMContentLoaded', () => {
 ..#############################...........#############################.....################################..
 ..............................................................................................................
 ..............................................................................................................
-`, `
+`,
+    `
 ..................................................................................................###.#.......
 ......................................................................................................#.......
 ..................................................................................................#####.......
@@ -175,8 +193,13 @@ window.addEventListener('DOMContentLoaded', () => {
 ........#######################################...#+++++++++++++++++++++###+++++++++++++++++++++++++++++++++++
 ..................................................############################################################
 ..............................................................................................................
-`];
+`,
+  ];
 
+  const GAME_STATUS = {
+    WON: 'won',
+    LOST: 'lost',
+  };
   /**  */
   class Vec {
     constructor(x, y) {
@@ -202,16 +225,6 @@ window.addEventListener('DOMContentLoaded', () => {
       return new Vec(this.x * factor, this.y * factor);
     }
   }
-
-  const simpleLevelPlan = `......................
-..#................#..
-..#..............=.#..
-..#.........o.o....#..
-..#.@......#####...#..
-..#####............#..
-......#++++++++++++#..
-......##############..
-......................`;
 
   /**
    * @constructor
@@ -286,7 +299,7 @@ window.addEventListener('DOMContentLoaded', () => {
     /**
      *
      */
-    static get type() {
+    get type() {
       return 'lava';
     }
 
@@ -325,7 +338,7 @@ window.addEventListener('DOMContentLoaded', () => {
       this.wobble = wobble;
     }
 
-    static get type() {
+    get type() {
       return 'coin';
     }
 
@@ -336,6 +349,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   Coin.prototype.size = new Vec(0.6, 0.6);
+
 
   const levelChars = {
     '.': 'empty',
@@ -504,9 +518,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (newState.status !== 'playing') return newState;
 
     // eslint-disable-next-line
-    const player  = newState.player;
+    const player = newState.player;
     if (this.level.touches(player.pos, player.size, 'lava')) {
-      return new State(this.level, actors, 'lost');
+      return new State(this.level, actors, GAME_STATUS.LOST);
     }
 
     for (const actor of actors) {
@@ -518,14 +532,14 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   Lava.prototype.collide = function collide(state) {
-    return new State(state.level, state.actors, 'lost');
+    return new State(state.level, state.actors, GAME_STATUS.LOST);
   };
 
   Coin.prototype.collide = function collide(state) {
     const filtered = state.actors.filter(a => a !== this);
     let { status } = state;
     // jeśli nie ma żadnego elementu spełniajacego warunek
-    if (!filtered.some(a => a.type === 'coin')) status = 'won';
+    if (!filtered.some(a => a.type === 'coin')) status = GAME_STATUS.WON;
     return new State(state.level, filtered, status);
   };
 
@@ -584,12 +598,16 @@ window.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
       }
     }
+    down.unregisterKeys = () => {
+      window.removeEventListener('keydown', track);
+      window.removeEventListener('keyup', track);
+    };
+
     window.addEventListener('keydown', track);
     window.addEventListener('keyup', track);
     return down;
   }
 
-  const arrowKeys = trackKeys(['ArrowLeft', 'ArrowRight', 'ArrowUp']);
 
   // Running the game
   function runAnimation(frameFunc) {
@@ -607,36 +625,122 @@ window.addEventListener('DOMContentLoaded', () => {
     window.requestAnimationFrame(frame);
   }
 
-
   function runLevel(level, Display) {
     const display = new Display(document.body, level);
     let state = State.start(level);
     let ending = 1;
+    let pause = false;
+    const arrowKeys = trackKeys(['ArrowLeft', 'ArrowRight', 'ArrowUp']);
+
     return new Promise((resolve) => {
-      runAnimation((time) => {
+      const runAnimationCb = (time) => {
         state = state.update(time, arrowKeys);
         display.syncState(state);
+        if (pause) {
+          return false;
+        }
         if (state.status === 'playing') {
           return true;
         } if (ending > 0) {
           ending -= time;
           return true;
         }
+
         display.clear();
         resolve(state.status);
+        arrowKeys.unregisterKeys();
+
+        // eslint-disable-next-line no-use-before-define
+        window.removeEventListener('keyup', pauseGameByEsc);
+
+
         return false;
-      });
+      };
+
+      const pauseGameByEsc = (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        pause = !pause;
+        if (!pause) {
+          runAnimation(runAnimationCb);
+        }
+      };
+
+      window.addEventListener('keyup', pauseGameByEsc);
+
+      runAnimation(runAnimationCb);
     });
   }
 
   async function runGame(plans, Display) {
-    for (let level = 0; level < plans.length;) {
-      const status = await runLevel(new Level(plans[level]),
-        Display);
-      if (status === 'won') level += 1;
+    let lives = 3;
+    let level = 0;
+
+    function printOpeningStatus() {
+      console.log(`At level: ${level + 1}, lives left `, lives);
     }
-    console.log("You've won!");
+
+    function printFinalStatus() {
+      if (lives === 0) {
+        console.log('Game over');
+      } else {
+        console.log("You've won!");
+      }
+    }
+
+    function updateLevelOrLives(status) {
+      if (status === GAME_STATUS.WON) {
+        level += 1;
+      } else {
+        lives -= 1;
+      }
+    }
+
+    for (level; level < plans.length;) {
+      printOpeningStatus();
+      const status = await runLevel(new Level(plans[level]), Display);
+      updateLevelOrLives(status);
+      if (lives === 0) {
+        break;
+      }
+    }
+    printFinalStatus();
   }
+
+  class Monster {
+    constructor(pos, speed) {
+      this.pos = pos;
+      this.speed = speed;
+    }
+
+    get type() { return 'monster'; }
+
+    static create(pos) {
+      return new Monster(pos.plus(new Vec(0, -1)), new Vec(2, 0));
+    }
+
+    update(time, state) {
+      const newPos = this.pos.plus(this.speed.times(time));
+      if (!state.level.touches(newPos, this.size, 'wall')) {
+        return new Monster(newPos, this.speed);
+      }
+      return new Monster(this.pos, this.speed.times(-1));
+    }
+
+    collide(state) {
+      const monsterTop = this.pos.y - this.size.y;
+      const playerTop = state.player.pos.y - state.player.size.y;
+      if (playerTop <= monsterTop) {
+        const filtered = state.actors.filter(monster => monster !== this);
+        return new State(state.level, filtered, state.status);
+      }
+      return new State(state.level, state.actors, GAME_STATUS.LOST);
+    }
+  }
+
+  Monster.prototype.size = new Vec(1.2, 2);
+
+  levelChars.M = Monster;
 
   runGame(GAME_LEVELS, DOMDisplay);
 });
