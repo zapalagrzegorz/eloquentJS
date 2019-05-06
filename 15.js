@@ -758,6 +758,11 @@ window.addEventListener('DOMContentLoaded', () => {
       tile = 9;
     } else if (player.speed.x !== 0) {
       // tile = Math.floor(Date.now() / 60) % 8;
+      const dateNow = Date.now();
+      console.log(dateNow);
+      console.log('date now / 60', Math.floor((dateNow / 60)));
+      console.log('date now', Math.floor((dateNow)));
+      console.log(new Date(dateNow).toISOString());
       tile = Math.floor(Date.now() / 60) % 8;
     }
 
