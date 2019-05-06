@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', () => {
     /**
      *
      */
-    static get type() {
+    get type() {
       return 'lava';
     }
 
@@ -331,7 +331,7 @@ window.addEventListener('DOMContentLoaded', () => {
       this.wobble = wobble;
     }
 
-    static get type() {
+    get type() {
       return 'coin';
     }
 
@@ -707,7 +707,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   const otherSprites = document.createElement('img');
-  otherSprites.src = 'img/sprites.png';
+  otherSprites.src = 'img/sprites_big.png';
 
   CanvasDisplay.prototype.drawBackground = function draw(level) {
     const {
@@ -734,7 +734,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   const playerSprites = document.createElement('img');
-  playerSprites.src = 'img/player.png';
+  playerSprites.src = 'img/player_big.png';
   const playerXOverlap = 4;
 
   function flipHorizontally(context, around) {
@@ -757,6 +757,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (player.speed.y !== 0) {
       tile = 9;
     } else if (player.speed.x !== 0) {
+      // tile = Math.floor(Date.now() / 60) % 8;
       tile = Math.floor(Date.now() / 60) % 8;
     }
 
