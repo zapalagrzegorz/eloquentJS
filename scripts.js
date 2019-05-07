@@ -69,17 +69,12 @@ window.addEventListener('DOMContentLoaded', function () {
             cx.lineTo(x, y);
         }
         cx.stroke();
-        //  const x = 350 + r * Math.cos(angle);
-        // const y = 50 + r * Math.sin(angle); // note 2.
-        // cx.lineTo(x, y);
     }
     function staring() {
         var cx = getCx(canvas);
         if (!cx) {
             return;
         }
-        // cx.resetTransform();
-        // cx.moveTo(500, 50);
         cx.beginPath(); // tell canvas to start a set of lines
         var step = (2 * Math.PI) / 8; // 2pi/180 = 1 degree
         var centerCircleX = 500;
@@ -87,20 +82,11 @@ window.addEventListener('DOMContentLoaded', function () {
         for (var angle = 0, r = 40; angle < 6 * Math.PI; angle += step) {
             var x = centerCircleX + r * Math.cos(angle);
             var y = centerCircleY + r * Math.sin(angle);
-            // control=(60,10) goal=(90,90)
+            // control=(500,50) goal=(x,y)
             cx.quadraticCurveTo(500, 50, x, y);
-            // cx.lineTo(x, y);
         }
         cx.fillStyle = 'orange';
         cx.fill();
-        // if (x === 200) {
-        //     x = 260;
-        //   } else {
-        //     x = 200;
-        //   }
-        // }
-        // cx.strokeStyle = 'black';
-        // cx.stroke();
     }
     writeTrapezoid();
     zigZaging();
