@@ -8,11 +8,6 @@ class Vec {
         this.x = x;
         this.y = y;
     }
-    /**
-     *
-     * @param {Vec} other
-     * @returns Vec
-     */
     plus(other) {
         return new Vec(this.x + other.x, this.y + other.y);
     }
@@ -27,12 +22,8 @@ class Ball {
     }
     update(time) {
         const newPos = this.pos.plus(this.speed.times(time));
-        if (this.pos.x > 360 || this.pos.x < 40) {
-            const newBall = new Ball(new Vec(this.pos.x > 360 ? 360 : 40, this.pos.y), this.speed.times(-1));
-            return newBall;
-        }
-        if (this.pos.y < 40 || this.pos.y > 360) {
-            const newBall = new Ball(new Vec(this.pos.x, this.pos.y < 40 ? 40 : 360), this.speed.times(-1));
+        if (newPos.x > 360 || newPos.x < 40 || newPos.y < 40 || newPos.y > 360) {
+            const newBall = new Ball(newPos, this.speed.times(-1));
             return newBall;
         }
         return new Ball(newPos, this.speed);
@@ -82,7 +73,7 @@ function updateAnimation(step) {
     //       isDirectionUp = !isDirectionUp;
     //     }
     //   }
-    state.ball = state.ball.update(step * 10);
+    state.ball = state.ball.update(step * 50);
     cx.beginPath();
     cx.arc(state.ball.pos.x, state.ball.pos.y, 40, 0, 7);
     //   cx.clearRect(0, 0, 400, 400);
