@@ -16,13 +16,13 @@ class Vec {
     }
 }
 class Ball {
-    constructor(pos = new Vec(200, 40), speed = new Vec(6, 10)) {
+    constructor(pos = new Vec(200, 40), speed = new Vec(10, 6)) {
         this.pos = pos;
         this.speed = speed;
     }
     update(time) {
         const newPos = this.pos.plus(this.speed.times(time));
-        if (newPos.x > 360 || newPos.x < 40 || newPos.y < 40 || newPos.y > 360) {
+        if (newPos.x > 300 || newPos.x < 25 + 20 || newPos.y < 25 + 20 || newPos.y > 350 - 20) {
             const newBall = new Ball(newPos, this.speed.times(-1));
             return newBall;
         }

@@ -8,34 +8,38 @@ class Vec {
         this.x = x;
         this.y = y;
     }
-    /**
-     *
-     * @param {Vec} other
-     * @returns Vec
-     */
     plus(other) {
         return new Vec(this.x + other.x, this.y + other.y);
     }
-    times(factor) {
-        return new Vec(this.x * factor, this.y * factor);
+    times(factorX = 1, factorY = 1) {
+        return new Vec(this.x * factorX, this.y * factorY);
     }
 }
 class Ball {
-    constructor(pos = new Vec(200, 40), speed = new Vec(6, 10)) {
+    constructor(pos = new Vec(200, 50), speed = new Vec(5, 3)) {
+        this.radius = 20;
+        this.speedX = 5;
+        this.speedY = 3;
         this.pos = pos;
         this.speed = speed;
     }
     update(time) {
-        const newPos = this.pos.plus(this.speed.times(time));
-        if (this.pos.x > 360 || this.pos.x < 40) {
-            const newBall = new Ball(new Vec(this.pos.x > 360 ? 360 : 40, this.pos.y), this.speed.times(-1));
-            return newBall;
+        // let newBall;
+        const newPos = this.pos.plus(this.speed.times(time, time));
+        // const speed = {x: 5, y: 3};
+        if (newPos.x > 335) {
+            this.speed.x = -5;
         }
-        if (this.pos.y < 40 || this.pos.y > 360) {
-            const newBall = new Ball(new Vec(this.pos.x, this.pos.y < 40 ? 40 : 360), this.speed.times(-1));
-            return newBall;
+        else if (newPos.x < 50) {
+            this.speed.x = 5;
         }
-        return new Ball(newPos, this.speed);
+        if (newPos.y <= 50) {
+            this.speed.y = 3;
+        }
+        else if (newPos.y >= 320) {
+            this.speed.y = -3;
+        }
+        return new Ball(newPos, new Vec(this.speed.x, this.speed.y));
     }
 }
 const state = {
@@ -44,13 +48,6 @@ const state = {
 // let ball = new Ball();
 const cx = document.querySelector('canvas').getContext('2d');
 let lastTime = 0;
-const ballY = 40;
-const isDirectionUp = false;
-let x = 100;
-let y = 300;
-const radius = 10;
-let speedX = 100;
-let speedY = 60;
 function frame(time) {
     if (lastTime != 0) {
         updateAnimation(Math.min(100, time - lastTime) / 1000);
@@ -64,7 +61,7 @@ function updateAnimation(step) {
     cx.fillStyle = 'gray';
     cx.strokeStyle = 'blue';
     cx.lineWidth = 4;
-    cx.strokeRect(25, 25, 350, 350);
+    cx.strokeRect(10, 10, 350, 350);
     //   cx.fillStyle = 'green';
     //   cx.beginPath();
     //   // center=(50,50) radius=40 angle=0 to 7
@@ -82,7 +79,7 @@ function updateAnimation(step) {
     //       isDirectionUp = !isDirectionUp;
     //     }
     //   }
-    state.ball = state.ball.update(step * 10);
+    state.ball = state.ball.update(step * 20);
     cx.beginPath();
     cx.arc(state.ball.pos.x, state.ball.pos.y, 40, 0, 7);
     //   cx.clearRect(0, 0, 400, 400);

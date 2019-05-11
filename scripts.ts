@@ -6,6 +6,7 @@
 
 class Vec {
   x: number;
+
   y: number;
 
   constructor(x: number, y: number) {
@@ -17,27 +18,42 @@ class Vec {
     return new Vec(this.x + other.x, this.y + other.y);
   }
 
-  times(factor: number) {
-    return new Vec(this.x * factor, this.y * factor);
+  times(factorX: number = 1, factorY: number = 1) {
+    return new Vec(this.x * factorX, this.y * factorY);
   }
 }
 
 class Ball {
   pos: Vec;
+
   speed: Vec;
 
-  constructor(pos: Vec = new Vec(200, 40), speed: Vec = new Vec(10, 6)) {
+  radius: number = 20;
+
+  speedX = 5;
+
+  speedY = 3;
+
+  constructor(pos: Vec = new Vec(200, 50), speed: Vec = new Vec(5, 3)) {
     this.pos = pos;
     this.speed = speed;
   }
 
   update(time: number) {
-    const newPos = this.pos.plus(this.speed.times(time));
-    if (newPos.x > 300 || newPos.x < 25 + 20 || newPos.y < 25 + 20 || newPos.y > 350 - 20) {
-        const newBall = new Ball(newPos, this.speed.times(-1));
-        return newBall;
+    // let newBall;
+    const newPos = this.pos.plus(this.speed.times(time, time));
+    // const speed = {x: 5, y: 3};
+    if (newPos.x > 335) {
+      this.speed.x = -5;
+    } else if (newPos.x < 50) {
+      this.speed.x = 5;
     }
-    return new Ball(newPos, this.speed);
+    if (newPos.y <= 50) {
+      this.speed.y = 3;
+    } else if (newPos.y >= 320) {
+      this.speed.y = -3;
+    }
+    return new Ball(newPos, new Vec(this.speed.x, this.speed.y));
   }
 }
 
@@ -49,14 +65,6 @@ const state = {
 const cx = document.querySelector('canvas')!.getContext('2d')!;
 
 let lastTime = 0;
-const ballY = 40;
-const isDirectionUp = false;
-
-let x = 100;
-let y = 300;
-const radius = 10;
-let speedX = 100;
-let speedY = 60;
 
 function frame(time: number) {
   if (lastTime != 0) {
@@ -73,7 +81,7 @@ function updateAnimation(step: number) {
 
   cx.strokeStyle = 'blue';
   cx.lineWidth = 4;
-  cx.strokeRect(25, 25, 350, 350);
+  cx.strokeRect(10, 10, 350, 350);
   //   cx.fillStyle = 'green';
   //   cx.beginPath();
   //   // center=(50,50) radius=40 angle=0 to 7
@@ -91,20 +99,20 @@ function updateAnimation(step: number) {
   //       isDirectionUp = !isDirectionUp;
   //     }
   //   }
-  state.ball = state.ball.update(step * 50);
+  state.ball = state.ball.update(step * 20);
   cx.beginPath();
   cx.arc(state.ball.pos.x, state.ball.pos.y, 40, 0, 7);
   //   cx.clearRect(0, 0, 400, 400);
   cx.fillStyle = 'green';
   cx.fill();
 
-//   x += step * speedX;
-//   y += step * speedY;
-//   if (x < 25 + radius || x > 375 - radius) speedX = -speedX;
-//   if (y < 25 + radius || y > 375 - radius) speedY = -speedY;
+  //   x += step * speedX;
+  //   y += step * speedY;
+  //   if (x < 25 + radius || x > 375 - radius) speedX = -speedX;
+  //   if (y < 25 + radius || y > 375 - radius) speedY = -speedY;
 
-//   cx.fillStyle = 'red';
-//   cx.beginPath();
-//   cx.arc(x, y, radius, 0, 7);
-//   cx.fill();
+  //   cx.fillStyle = 'red';
+  //   cx.beginPath();
+  //   cx.arc(x, y, radius, 0, 7);
+  //   cx.fill();
 }
