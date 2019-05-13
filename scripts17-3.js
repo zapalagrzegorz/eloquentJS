@@ -32,7 +32,6 @@ class Ball {
 const state = {
     ball: new Ball(),
 };
-// let ball = new Ball();
 const cx = document.querySelector('canvas').getContext('2d');
 let lastTime = 0;
 const ballY = 40;
@@ -56,23 +55,6 @@ function updateAnimation(step) {
     cx.strokeStyle = 'blue';
     cx.lineWidth = 4;
     cx.strokeRect(25, 25, 350, 350);
-    //   cx.fillStyle = 'green';
-    //   cx.beginPath();
-    //   // center=(50,50) radius=40 angle=0 to 7
-    //   if (isDirectionUp) {
-    //     if (ballY - 1 > 45) {
-    //       ballY--;
-    //     } else {
-    //       isDirectionUp = !isDirectionUp;
-    //     }
-    //   }
-    //   if (!isDirectionUp) {
-    //     if (ballY + 1 < 360) {
-    //       ballY++;
-    //     } else {
-    //       isDirectionUp = !isDirectionUp;
-    //     }
-    //   }
     state.ball = state.ball.update(step * 50);
     cx.beginPath();
     cx.arc(state.ball.pos.x, state.ball.pos.y, 40, 0, 7);
