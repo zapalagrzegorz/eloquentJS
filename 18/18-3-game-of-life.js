@@ -4,84 +4,133 @@
 document.addEventListener('DOMContentLoaded', () => {
     const rows = 7;
     const columns = 8;
-    const lifeCellValues = [];
-    function init() {
-        const grid = document.querySelector('#grid');
-        if (!grid) {
-            return;
+    let lifeCellValues = [];
+    const grid = document.querySelector('#grid');
+    if (!grid) {
+        return;
+    }
+    function createAndSetLifeMap(nextGenValues) {
+        /**
+         *
+         * Zwraca pole mapy z wartością ustawioną losowo, albo wartością z kolejnej generacji
+         * @param  {Number} row       Indeks rzędu
+         * @param  {Number} column    Indeks kolumny
+         * @return {HTMLInputElement} Pole mapy
+         */
+        function getLifeField(row, column, nextGenValues) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.dataset.index = String(row) + String(column);
+            if (nextGenValues) {
+                checkbox.checked = nextGenValues[row][column];
+            }
+            else {
+                checkbox.checked = Math.random() >= 0.5;
+            }
+            return checkbox;
+        }
+        function updateDOM(DOMTarget, DOMContent) {
+            DOMTarget.innerHTML = '';
+            DOMTarget.appendChild(DOMContent);
         }
         const documentFragment = document.createDocumentFragment();
         documentFragment.appendChild(document.createElement('p'));
         const parent = documentFragment.querySelector('p');
-        if (!parent) {
+        if (!parent || !grid) {
             return;
         }
-        // 7 na 8
-        //
+        // create values
+        lifeCellValues = [];
         for (let i = 0; i < rows; i++) {
             lifeCellValues.push([]);
             for (let j = 0; j < columns; j++) {
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.dataset.index = String(i) + String(j);
-                checkbox.checked = Math.random() >= 0.5;
+                const checkbox = getLifeField(i, j, nextGenValues);
                 parent.appendChild(checkbox);
-                checkbox.addEventListener('change', function () {
-                    if (!this.dataset.index) {
-                        return;
-                    }
-                    const index = this.dataset.index.split('');
-                    const row = Number(index[0]);
-                    const column = Number(index[1]);
-                    lifeCellValues[row][column] = this.checked;
-                    console.log(lifeCellValues[row][column]);
-                });
                 lifeCellValues[i].push(checkbox.checked);
             }
             parent.appendChild(document.createElement('br'));
         }
-        grid.appendChild(documentFragment);
+        updateDOM(grid, documentFragment);
     }
     function generate() {
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < columns; j++) {
-                const lifeForm = lifeCellValues[i][j];
-                // maxymalnie 8 sąsiadów
-                // findNeighbours
-                // 1, 1
-                // -1 oraz + 1, -1, +1
-                //
-                const liveNeighbours = 0;
-                if (lifeCellValues[i - 1] && lifeCellValues[i - 1][j]) {
-                    liveNeighbours + 1;
+        const countLiveNeighbours = function (lifeCellValues, i, j) {
+            let liveNeighbours = 0;
+            if (lifeCellValues[i - 1]) {
+                if (lifeCellValues[i - 1][j]) {
+                    liveNeighbours += 1;
                 }
-                if (lifeCellValues[i - 1] && lifeCellValues[i - 1][j - 1]) {
-                    liveNeighbours + 1;
-                }
-                if (lifeCellValues[i][j - 1]) {
-                    liveNeighbours + 1;
-                }
-                if (lifeCellValues[i + 1][j - 1]) {
-                    liveNeighbours + 1;
-                }
-                if (lifeCellValues[i + 1][j]) {
-                    liveNeighbours + 1;
-                }
-                if (lifeCellValues[i + 1][j + 1]) {
-                    liveNeighbours + 1;
-                }
-                if (lifeCellValues[i][j + 1]) {
-                    liveNeighbours + 1;
+                if (lifeCellValues[i - 1][j - 1]) {
+                    liveNeighbours += 1;
                 }
                 // undefined
                 if (lifeCellValues[i - 1][j + 1]) {
-                    liveNeighbours + 1;
+                    liveNeighbours += 1;
+                }
+            }
+            /* cells of higher row - bottom  */
+            if (lifeCellValues[i + 1]) {
+                if (lifeCellValues[i + 1][j - 1]) {
+                    liveNeighbours += 1;
+                }
+                if (lifeCellValues[i + 1][j]) {
+                    liveNeighbours += 1;
+                }
+                if (lifeCellValues[i + 1][j + 1]) {
+                    liveNeighbours += 1;
+                }
+            }
+            /* to left and right */
+            if (lifeCellValues[i][j - 1]) {
+                liveNeighbours += 1;
+            }
+            if (lifeCellValues[i][j + 1]) {
+                liveNeighbours += 1;
+            }
+            return liveNeighbours;
+        };
+        const updateCellValue = function () { };
+        const lifeCellValuesNextGen = JSON.parse(JSON.stringify(lifeCellValues));
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < columns; j++) {
+                const liveNeighbours = countLiveNeighbours(lifeCellValues, i, j);
+                if (liveNeighbours < 2 || liveNeighbours > 3) {
+                    lifeCellValuesNextGen[i][j] = false;
+                }
+                // zbędny warunek - wartość się nie zmienia
+                if ((liveNeighbours === 2 || liveNeighbours === 3) && lifeCellValues[i][j]) {
+                    lifeCellValuesNextGen[i][j] = true;
+                }
+                if (liveNeighbours === 3 && !lifeCellValues[i][j]) {
+                    lifeCellValuesNextGen[i][j] = true;
                 }
             }
         }
+        createAndSetLifeMap(lifeCellValuesNextGen);
+        // Any live cell with two or three live neighbors lives on to the next generation.
+        // Any dead cell with exactly three live neighbors becomes a live cell.
+    }
+    function init() {
+        createAndSetLifeMap();
+        document.addEventListener('change', function (event) {
+            const target = event.target;
+            if (!target.dataset) {
+                return;
+            }
+            const index = target.dataset.index.split('');
+            const row = Number(index[0]);
+            const column = Number(index[1]);
+            lifeCellValues[row][column] = target.checked;
+        });
+        document.addEventListener('click', (event) => {
+            if (!event.target) {
+                return;
+            }
+            if (event.target.matches('#next')) {
+                generate();
+            }
+        });
     }
     init();
-    generate();
 });
 //   const distance = Math.max(Math.abs(candle.row - indexRow), Math.abs(candle.index - indexHeight));
 // const run = document.querySelector<HTMLButtonElement>('#button');

@@ -65,33 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
-  function init() {
-    createAndSetLifeMap();
-
-    document.addEventListener('change', function (event) {
-      const target = event.target as HTMLInputElement;
-
-      if (!target.dataset) {
-        return;
-      }
-
-      const index = (target as any).dataset.index.split('');
-      const row = Number(index[0]);
-      const column = Number(index[1]);
-      lifeCellValues[row][column] = target.checked;
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!event.target) {
-        return;
-      }
-
-      if ((event.target as HTMLElement).matches('#next')) {
-        generate();
-      }
-    });
-  }
-
   function generate() {
     const countLiveNeighbours = function (
       lifeCellValues: Array<Array<boolean>>,
@@ -165,6 +138,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Any live cell with two or three live neighbors lives on to the next generation.
 
     // Any dead cell with exactly three live neighbors becomes a live cell.
+  }
+
+  function init() {
+    createAndSetLifeMap();
+
+    document.addEventListener('change', function (event) {
+      const target = event.target as HTMLInputElement;
+
+      if (!target.dataset) {
+        return;
+      }
+
+      const index = (target as any).dataset.index.split('');
+      const row = Number(index[0]);
+      const column = Number(index[1]);
+      lifeCellValues[row][column] = target.checked;
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target) {
+        return;
+      }
+
+      if ((event.target as HTMLElement).matches('#next')) {
+        generate();
+      }
+    });
   }
 
   init();
